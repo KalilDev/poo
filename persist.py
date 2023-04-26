@@ -58,6 +58,7 @@ class Persist:
     def set_index(self, index):
         self.index = index
 
+
 class Funcionario(Persist):
     nome: str
     cpf: str

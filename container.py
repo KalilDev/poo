@@ -1,5 +1,4 @@
 import os
-import time
 import pickle
 
 
@@ -32,7 +31,7 @@ class Container:
         self.objects.append(obj)
 
     def edit_object(self, index, obj):
-        self.objects[index-1] = obj
+        self.objects[index - 1] = obj
 
     def delete_object(self, index):
         # TODO
@@ -55,7 +54,7 @@ class Container:
 
     def persist(self):
         for i in range(len(self.objects)):
-            self.objects[i].set_index(i+1)
+            self.objects[i].set_index(i + 1)
 
         with open(self.filename, 'wb') as f:
             pickle.dump(self, f)

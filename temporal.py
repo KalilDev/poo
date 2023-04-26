@@ -16,8 +16,10 @@ class Duracao(BaseModel):
 
     def __sub__(self, other: "Duracao"):
         return Duracao.from_timedelta(self.to_timedelta() - other.to_timedelta())
+
     def __add__(self, other: "Duracao"):
         return Duracao.from_timedelta(self.to_timedelta() + other.to_timedelta())
+
 
 class DiaDaSemana(str, Enum):
     SEGUNDA = "segunda"
@@ -27,16 +29,25 @@ class DiaDaSemana(str, Enum):
     SEXTA = "sexta"
     SABADO = "sabado"
     DOMINGO = "domingo"
+
     @staticmethod
     def from_weekday(weekday: int):
         match weekday:
-            case 0: return DiaDaSemana.SEGUNDA
-            case 1: return DiaDaSemana.TERCA
-            case 2: return DiaDaSemana.QUARTA
-            case 3: return DiaDaSemana.QUINTA
-            case 4: return DiaDaSemana.SEXTA
-            case 5: return DiaDaSemana.SABADO
-            case 6: return DiaDaSemana.DOMINGO
+            case 0:
+                return DiaDaSemana.SEGUNDA
+            case 1:
+                return DiaDaSemana.TERCA
+            case 2:
+                return DiaDaSemana.QUARTA
+            case 3:
+                return DiaDaSemana.QUINTA
+            case 4:
+                return DiaDaSemana.SEXTA
+            case 5:
+                return DiaDaSemana.SABADO
+            case 6:
+                return DiaDaSemana.DOMINGO
+
 
 class Data(BaseModel):
     dia_da_semana: DiaDaSemana
@@ -64,7 +75,8 @@ class Data(BaseModel):
 
     @staticmethod
     def from_datetime(datetime: datetime.datetime):
-        return Data(dia=datetime.day, mes=datetime.month, ano=datetime.year, dia_da_semana = DiaDaSemana.from_weekday(datetime.weekday()))
+        return Data(dia=datetime.day, mes=datetime.month, ano=datetime.year,
+                    dia_da_semana=DiaDaSemana.from_weekday(datetime.weekday()))
 
     def com_tempo(self, tempo: "Tempo") -> "DataTempo":
         return DataTempo(data=self, tempo=tempo)
@@ -78,8 +90,10 @@ class Data(BaseModel):
 
     def __sub__(self, other: "Data") -> Duracao:
         return Duracao.from_timedelta(self.to_datetime() - other.to_datetime())
+
     def __add__(self, other: Duracao):
         return Data.from_datetime(self.to_datetime() + other.to_timedelta())
+
 
 class Tempo(BaseModel):
     hora: int
@@ -109,7 +123,8 @@ class Tempo(BaseModel):
         return Tempo(hora=datetime.hour, minuto=datetime.minute, segundo=datetime.second)
 
     def to_datetime(self, date: datetime.datetime = datetime.datetime.now()) -> datetime.datetime:
-        return datetime.datetime(hour=self.hora, minute=self.minuto, second=self.segundo, day=date.day, month=date.month, year=date.year)
+        return datetime.datetime(hour=self.hora, minute=self.minuto, second=self.segundo, day=date.day,
+                                 month=date.month, year=date.year)
 
     @staticmethod
     def now() -> "Tempo":
@@ -120,8 +135,10 @@ class Tempo(BaseModel):
 
     def __sub__(self, other: "Tempo") -> Duracao:
         return Duracao.from_timedelta(self.to_datetime() - other.to_datetime())
+
     def __add__(self, other: Duracao):
         return DataTempo.from_datetime(self.to_datetime() + other.to_timedelta())
+
 
 class DataTempo(BaseModel):
     data: Data
@@ -142,6 +159,6 @@ class DataTempo(BaseModel):
 
     def __sub__(self, other: "DataTempo"):
         return Duracao.from_timedelta(self.to_datetime() - other.to_datetime())
-    def __add__(self, other: Duracao):
-        return DataTempo.from_datetime(self.to_datetime()+other.to_timedelta())
 
+    def __add__(self, other: Duracao):
+        return DataTempo.from_datetime(self.to_datetime() + other.to_timedelta())
