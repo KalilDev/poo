@@ -1,5 +1,5 @@
 from identificadores import SiglaAeroporto, SiglaCompanhiaAerea, RegistroDeViagem, RegistroDePassagem, CodigoDoAssento, \
-    DocumentoCliente
+    DocumentoPassageiro
 from temporal import Data, DataTempo
 
 
@@ -8,7 +8,7 @@ class Passagem:
     aeroporto_de_saida: SiglaAeroporto
     aeroporto_de_chegada: SiglaAeroporto
     companhia_aerea: SiglaCompanhiaAerea
-    documento_cliente: DocumentoCliente
+    documento_cliente: DocumentoPassageiro
     data: Data
     valor: float
     assentos: dict[RegistroDeViagem, CodigoDoAssento]
@@ -19,7 +19,7 @@ class Passagem:
                  aeroporto_de_saida: SiglaAeroporto,
                  aeroporto_de_chegada: SiglaAeroporto,
                  companhia_aerea: SiglaCompanhiaAerea,
-                 documento_cliente: DocumentoCliente,
+                 documento_cliente: DocumentoPassageiro,
                  data: Data,
                  valor: float,
                  assentos: dict[RegistroDeViagem, CodigoDoAssento],

@@ -38,6 +38,9 @@ class Duracao(BaseModel):
     def __gt__(self, other: "Duracao"):
         return self.to_timedelta() > other.to_timedelta()
 
+    def __lt__(self, other: "Duracao"):
+        return self.to_timedelta() < other.to_timedelta()
+
 class DiaDaSemana(str, Enum):
     SEGUNDA = "segunda"
     TERCA = "terca"
@@ -179,3 +182,9 @@ class DataTempo(BaseModel):
 
     def __add__(self, other: Duracao):
         return DataTempo.from_datetime(self.to_datetime() + other.to_timedelta())
+
+    def __gt__(self, other: "DataTempo"):
+        return self.to_datetime() > other.to_datetime()
+
+    def __lt__(self, other: "DataTempo"):
+        return self.to_datetime() < other.to_datetime()

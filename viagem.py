@@ -38,3 +38,9 @@ class Viagem:
         self.tarifa = tarifa
         self.tarifa_franquia = tarifa_franquia
         self.assentos = assentos
+
+    def __gt__(self, other: "Viagem"):
+        return self.hora_de_partida > other.hora_de_partida
+
+    def __lt__(self, other: "Viagem"):
+        return self.hora_de_partida < other.hora_de_partida

@@ -1,3 +1,4 @@
+import re
 from enum import Enum
 from math import ceil
 from typing import Optional, Tuple
@@ -187,7 +188,7 @@ class Passaporte(BaseModel):
         return self.passaporte
 
 
-class DocumentoCliente(BaseModel):
+class DocumentoPassageiro(BaseModel):
     passaporte: Optional[Passaporte] = None
     rg: Optional[RG] = None
 
@@ -311,3 +312,56 @@ class GeradorDeCodigoDoAssento:
         while self.passenger_count - (self.current_index - 1) != 0:
             codigos.append(self.gerar())
         return codigos
+
+class Email(BaseModel):
+    _EMAIL_REGEX = re.compile(r"[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?", re.IGNORECASE)
+
+    email: str
+
+    def __init__(self, email: str):
+        super().__init__(email = email)
+
+    def __str__(self):
+        return self.email
+
+    @validator('email')
+    def valida_email(self, email: str):
+        if not Email._EMAIL_REGEX.match(email):
+            raise ValueError("Formato invalido de email")
+        return email
+
+class CPF(BaseModel):
+    cpf: str
+
+    def __init__(self, cpf: str):
+        super().__init__(cpf = cpf)
+
+    def __str__(self):
+        return self.cpf
+
+    @validator('cpf')
+    def valida_cpf(self, cpf: str):
+        # Remover pontos e traços
+        cpf = cpf.replace('.', '').replace('-', '')
+        if not cpf.isnumeric() or len(cpf) != 11:
+            raise ValueError("CPF invalido")
+        # Verificar o primeiro digito da validaçao
+        sum = 0
+        for i, digit in enumerate(cpf[:9]):
+            sum += int(digit) * (10 - i)
+        if sum % 11 < 2:
+            digit_1 = 0
+        else:
+            digit_1 = 11 - (sum % 11)
+        # Verificar o segundo digito da validacao
+        sum = 0
+        for i, digit in enumerate(cpf[:10]):
+            sum += int(digit) * (11 - i)
+        if sum % 11 < 2:
+            digit_2 = 0
+        else:
+            digit_2 = 11 - (sum % 11)
+        # Conferir os dois digitos
+        if cpf[-2:] != f"{digit_1}{digit_2}":
+            raise ValueError("CPF invalido")
+        return cpf

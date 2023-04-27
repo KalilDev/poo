@@ -1,6 +1,7 @@
 from typing import Optional
 
 from assento import Assento
+from calculo_tarifa_strategy import calculo_tarifa_strategy_for
 from franquia_de_bagagem import FranquiasDeBagagem
 from identificadores import RegistroDeViagem, RegistroDeAeronave, CodigoVoo, SiglaAeroporto, GeradorDeRegistroDeViagem, \
     CodigoDoAssento, RegistroDePassagem
@@ -93,7 +94,7 @@ class ViagemFactory:
                 return assento.codigo
         assert False
 
-    def reservar_assento(self, registro_passagem: RegistroDePassagem, franquias: FranquiasDeBagagem,
+    def reservar_assento(self, cliente_vip: bool, registro_passagem: RegistroDePassagem, franquias: FranquiasDeBagagem,
                          assento_desejado: CodigoDoAssento) -> float:
         if not self.tem_carga_disponivel_para_franquias(franquias):
             raise ValueError("Não tem carga para franquia disponivel")
@@ -103,7 +104,7 @@ class ViagemFactory:
         if assento.preenchido():
             raise ValueError("O assento está preenchido")
         assento.reservar(registro_passagem, franquias)
-        return self.tarifa + len(franquias.franquias) * self.tarifa_franquia
+        return calculo_tarifa_strategy_for(cliente_vip, self.tarifa, self.tarifa_franquia).calcula(franquias)
 
     def liberar_assento(self, registro_passagem: RegistroDePassagem, assento: CodigoDoAssento) -> None:
         if assento not in self.assentos:

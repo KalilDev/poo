@@ -1,6 +1,8 @@
 from aeroporto import SiglaAeroporto
 from assento import Assento
+from calculo_tarifa_strategy import calculo_tarifa_strategy_for
 from companhia_aerea import SiglaCompanhiaAerea
+from franquia_de_bagagem import FranquiasDeBagagem
 from identificadores import RegistroDeAeronave, CodigoVoo, GeradorDeCodigoDoAssento, CodigoDoAssento
 from temporal import Tempo, DiaDaSemana, Duracao
 
@@ -43,8 +45,8 @@ class Voo:
         self.capacidade_carga = capacidade_carga
         self.tarifa = tarifa
 
-    def calcula_tarifa(self, franquias: int, tarifa_franquia: float) -> float:
-        return self.tarifa + tarifa_franquia * franquias
+    def calcula_tarifa(self, cliente_vip: bool, franquias: FranquiasDeBagagem, tarifa_franquia: float) -> float:
+        return calculo_tarifa_strategy_for(cliente_vip, self.tarifa, tarifa_franquia).calcula(franquias)
 
     def construir_assentos(self) -> dict[CodigoDoAssento, Assento]:
         gerador = GeradorDeCodigoDoAssento(self.capacidade_passageiros, 0.0)
