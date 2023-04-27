@@ -6,7 +6,7 @@ from franquia_de_bagagem import FranquiasDeBagagem
 from identificadores import SiglaCompanhiaAerea, RegistroDeAeronave, CodigoVoo, RegistroDeViagem, \
     GeradorDeRegistroDeViagem, SiglaAeroporto, DocumentoPassageiro, GeradorDeRegistroDePassagem, CodigoDoAssento, \
     RegistroDePassagem
-from passagem import Passagem
+from passagem import Passagem, StatusDaPassagem, PassagemCheckInNaoAberto
 from persist import Persist
 from temporal import Data, Duracao, DataTempo, Tempo
 from viagem import Viagem
@@ -73,6 +73,12 @@ class CompanhiaAerea(Persist):
         fabrica.add_hora_de_partida_e_hora_de_chegada(hora_de_partida, hora_de_chegada)
         viagem = fabrica.build()
         self.voos_executados[viagem.registro] = viagem
+        for assento in viagem.assentos.values():
+            if assento.vazio():
+                continue
+            registro_passagem = assento.passagem
+            passagem = self.passagens[registro_passagem]
+            passagem.acionar_evento(StatusDaPassagem.Evento.CONCLUIR)
 
     def _encontrar_voos_sem_conexao(self, data: Data, aeroporto_de_saida: SiglaAeroporto,
                                     aeroporto_de_chegada: SiglaAeroporto) -> list[CodigoVoo]:
@@ -177,6 +183,8 @@ class CompanhiaAerea(Persist):
         if passagem not in self.passagens:
             raise ValueError("Passagem não está na companhia")
         passagem = self.passagens[passagem]
+        if not passagem.acionar_evento(StatusDaPassagem.Evento.CANCELAR):
+            raise ValueError("A passagem não pode ser cancelada agora")
         data = passagem.data
         for viagem, assento in passagem.assentos.items():
             voos_em_venda_na_data = self.voos_em_venda[data]
@@ -184,11 +192,33 @@ class CompanhiaAerea(Persist):
                 raise ValueError("Não é possivel cancelar uma viagem que já ocorreu")
             viagem = voos_em_venda_na_data[viagem]
             viagem.liberar_assento(passagem.registro, assento)
-        id_cliente = passagem.documento_cliente
-        cliente = self.passageiros[id_cliente]
-        cliente.passagens.remove(passagem.registro)
-        del self.passagens[passagem.registro]
         return
+    def abrir_check_in_para_passagens(self, *args: RegistroDePassagem):
+        if len(args) != 0:
+            for registro_passagem in args:
+                if registro_passagem not in self.passagens:
+                    raise ValueError("Passagem não está na companhia")
+                passagem = self.passagens[registro_passagem]
+                if passagem.data - Data.now() < Duracao.um_dia() * 2:
+                    continue
+                raise ValueError("Passagem está a mais de 48h de distancia")
+
+            for registro_passagem in args:
+                passagem = self.passagens[registro_passagem]
+                passagem.acionar_evento(StatusDaPassagem.Evento.ABRIR_CHECK_IN)
+            return
+        for passagem in self.passagens.values():
+            if passagem.data - Data.now() < Duracao.um_dia() * 2:
+                passagem.acionar_evento(StatusDaPassagem.Evento.ABRIR_CHECK_IN)
+
+    def fazer_check_in(self, passagem: RegistroDePassagem):
+        if passagem not in self.passagens:
+            raise ValueError("Passagem não está na companhia")
+        passagem = self.passagens[passagem]
+        if passagem.data - Data.now() < Duracao.um_dia() * 2:
+            passagem.acionar_evento(StatusDaPassagem.Evento.ABRIR_CHECK_IN)
+        if not passagem.acionar_evento(StatusDaPassagem.Evento.FAZER_CHECK_IN):
+            raise ValueError("Não é possivel fazer checkin agora")
 
     def comprar_passagem(self, id_cliente: DocumentoPassageiro, data: Data, aeroporto_de_saida: SiglaAeroporto,
                          aeroporto_de_chegada: SiglaAeroporto, franquias: FranquiasDeBagagem,
@@ -222,10 +252,15 @@ class CompanhiaAerea(Persist):
         viagens_assentos = {}
         valor_total = 0
         for viagem_factory in viagem_factories:
+            # gustavo esteve aqui no dia 27/04 as 20:11
             assento_desejado = cast(CodigoDoAssento, assento or viagem_factory.codigo_assento_liberado())
             valor = viagem_factory.reservar_assento(cliente.vip, registro_passagem, franquias, assento_desejado)
             valor_total += valor
             viagens_assentos[viagem_factory.registro] = assento_desejado
+        status = PassagemCheckInNaoAberto()
+        if data - Data.now() < Duracao.um_dia() * 2:
+            status = status.abrir_check_in()
+
         passagem = Passagem(
             registro_passagem,
             self.voos_planejados[voos[0]].aeroporto_de_saida,
@@ -234,8 +269,10 @@ class CompanhiaAerea(Persist):
             id_cliente,
             data,
             valor_total,
+            0,
             viagens_assentos,
-            DataTempo.now()
+            DataTempo.now(),
+            status
         )
         cliente.passagens.append(passagem.registro)
         self.passagens[registro_passagem] = passagem
