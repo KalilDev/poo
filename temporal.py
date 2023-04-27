@@ -1,11 +1,23 @@
 import datetime
 
-from pydantic import BaseModel, validator
+from pydantic import BaseModel, validator, Field
 
 
 class Duracao(BaseModel):
-    dias: int
-    segundos: int
+    dias: int = Field(0)
+    segundos: int = Field(0)
+    @staticmethod
+    def um_dia():
+        return Duracao(dias=1)
+    @staticmethod
+    def um_segundo():
+        return Duracao(segundos=1)
+
+    @staticmethod
+    def meia_hora():
+        minuto = 60
+        hora = 60
+        return Duracao(segundos=minuto * hora / 2)
 
     @staticmethod
     def from_timedelta(timedelta: datetime.timedelta) -> "Duracao":
@@ -20,6 +32,11 @@ class Duracao(BaseModel):
     def __add__(self, other: "Duracao"):
         return Duracao.from_timedelta(self.to_timedelta() + other.to_timedelta())
 
+    def __mul__(self, other: float):
+        return Duracao.from_timedelta(self.to_timedelta() * other)
+
+    def __gt__(self, other: "Duracao"):
+        return self.to_timedelta() > other.to_timedelta()
 
 class DiaDaSemana(str, Enum):
     SEGUNDA = "segunda"
