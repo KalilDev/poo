@@ -41,9 +41,9 @@ class Passageiro(BaseModel):
         )
 
     @validator('cpf')
-    def valida_cpf_se_brasileiro(self, cpf: Optional[CPF]):
-        if self.nacionalidade == Nacionalidade.BRASIL and cpf is None:
+    def valida_cpf_se_brasileiro(self, cpf: Optional[CPF], values):
+        if values['nacionalidade'] == Nacionalidade.BRASIL and cpf is None:
             raise ValueError('O CPF deve ser definido para brasileiros')
-        if self.nacionalidade != Nacionalidade.BRASIL and cpf is not None:
+        if values['nacionalidade'] != Nacionalidade.BRASIL and cpf is not None:
             raise ValueError('O CPF deve ser definido somente para brasileiros')
         return cpf

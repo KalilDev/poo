@@ -9,7 +9,7 @@ from temporal import Data, DataTempo
 from viagem import Viagem
 
 
-class ViagemFactory:
+class ViagemBuilder:
     gerador_de_registro: GeradorDeRegistroDeViagem
     registro: RegistroDeViagem
     data: Data
@@ -33,26 +33,23 @@ class ViagemFactory:
     # Passagens
     assentos: dict[CodigoDoAssento, Assento]
 
-    def __init__(self):
-        self.aeronaves_possiveis = set()
-
-    def add_tarifa_franquia(self, tarifa_franquia: float) -> "ViagemFactory":
+    def add_tarifa_franquia(self, tarifa_franquia: float) -> "ViagemBuilder":
         self.tarifa_franquia = tarifa_franquia
         return self
 
-    def adicionar_gerador_de_registro(self, gerador_de_registro: GeradorDeRegistroDeViagem) -> "ViagemFactory":
+    def adicionar_gerador_de_registro(self, gerador_de_registro: GeradorDeRegistroDeViagem) -> "ViagemBuilder":
         self.gerador_de_registro = gerador_de_registro
         return self
 
-    def gerar_registro(self) -> "ViagemFactory":
+    def gerar_registro(self) -> "ViagemBuilder":
         self.registro = self.gerador_de_registro.gerar()
         return self
 
-    def add_data(self, data: Data) -> "ViagemFactory":
+    def add_data(self, data: Data) -> "ViagemBuilder":
         self.data = data
         return self
 
-    def add_voo(self, voo: "Voo") -> "ViagemFactory":
+    def add_voo(self, voo: "Voo") -> "ViagemBuilder":
         self.carga = voo.capacidade_carga
         self.passageiros = voo.capacidade_passageiros
         self.codigo_do_voo = voo.codigo
@@ -62,7 +59,7 @@ class ViagemFactory:
         self.assentos = voo.construir_assentos()
         return self
 
-    def add_aeronave(self, aeronave: "Aeronave") -> "ViagemFactory":
+    def add_aeronave(self, aeronave: "Aeronave") -> "ViagemBuilder":
         carga = aeronave.capacidade_carga
         passageiros = aeronave.capacidade_passageiros
         if carga != self.carga or passageiros != self.passageiros:
@@ -114,7 +111,7 @@ class ViagemFactory:
             raise ValueError("Não foi essa passagem que reservou o assento")
         assento.liberar()
 
-    def add_hora_de_partida_e_hora_de_chegada(self, hora_de_partida: DataTempo, hora_de_chegada: DataTempo) -> "ViagemFactory":
+    def add_hora_de_partida_e_hora_de_chegada(self, hora_de_partida: DataTempo, hora_de_chegada: DataTempo) -> "ViagemBuilder":
         self.hora_de_partida = hora_de_partida
         self.hora_de_chegada = hora_de_chegada
         return self

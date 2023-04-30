@@ -195,6 +195,9 @@ class DocumentoPassageiro(BaseModel):
     def __init__(self, **kwargs):
         if "rg" not in kwargs and "passaporte" not in kwargs:
             raise ValueError("Ou um passaporte ou um rg devem ser especificados")
+        if "rg" in kwargs:
+            if "passaporte" in kwargs:
+                raise ValueError("somente rg ou passaporte devem ser especificados")
         super().__init__(**kwargs)
 
     def documento(self) -> Passaporte | RG:

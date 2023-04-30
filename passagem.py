@@ -151,25 +151,3 @@ class Passagem:
         new_status = self.status.dispatch_event(evento)
         self.status = new_status
         return old_status == new_status
-    #def alterar_status(self, status: StatusDaPassagem) -> bool:
-    #    match self.status:
-    #        case StatusDaPassagem.CANCELADA:
-    #            return False
-    #        case StatusDaPassagem.CHECK_IN_NAO_ABERTO:
-    #            if status != StatusDaPassagem.AGUARDANDO_CHECK_IN or status != StatusDaPassagem.CANCELADA:
-    #                return False
-    #        case StatusDaPassagem.AGUARDANDO_CHECK_IN:
-    #            if status != StatusDaPassagem.CANCELADA or status != StatusDaPassagem.NAO_APARECEU:
-    #                return False
-    #        case StatusDaPassagem.NAO_APARECEU:
-    #            return False
-    #        case StatusDaPassagem.CHECKED_IN:
-    #            if status != StatusDaPassagem.CONCLUIDA_COM_SUCESSO or status != StatusDaPassagem.NAO_APARECEU:
-    #                return False
-    #        case StatusDaPassagem.EMBARCADO:
-    #            if status != StatusDaPassagem.CONCLUIDA_COM_SUCESSO:
-    #                return False
-    #        case StatusDaPassagem.CONCLUIDA_COM_SUCESSO:
-    #            return False
-    #    status = status
-    #    return True

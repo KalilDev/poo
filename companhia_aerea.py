@@ -10,7 +10,7 @@ from passagem import Passagem, StatusDaPassagem, PassagemCheckInNaoAberto
 from persist import Persist
 from temporal import Data, Duracao, DataTempo, Tempo
 from viagem import Viagem
-from viagem_factory import ViagemFactory
+from viagem_builder import ViagemBuilder
 from voo import Voo
 
 
@@ -21,7 +21,7 @@ class CompanhiaAerea(Persist):
     sigla: SiglaCompanhiaAerea
     aeronaves: dict[RegistroDeAeronave, Aeronave]
     voos_planejados: dict[CodigoVoo, Voo]
-    voos_em_venda: dict[Data, dict[RegistroDeViagem, ViagemFactory]]
+    voos_em_venda: dict[Data, dict[RegistroDeViagem, ViagemBuilder]]
     voos_executados: dict[RegistroDeViagem, Viagem]
     gerador_de_registro_de_viagem: GeradorDeRegistroDeViagem
     gerador_de_registro_de_passagem: GeradorDeRegistroDePassagem
@@ -37,7 +37,7 @@ class CompanhiaAerea(Persist):
                  sigla: SiglaCompanhiaAerea,
                  aeronaves: dict[RegistroDeAeronave, Aeronave],
                  voos_planejados: dict[CodigoVoo, Voo],
-                 voos_em_venda: dict[Data, dict[RegistroDeViagem, ViagemFactory]],
+                 voos_em_venda: dict[Data, dict[RegistroDeViagem, ViagemBuilder]],
                  voos_executados: dict[RegistroDeViagem, Viagem],
                  gerador_de_registro_de_viagem: GeradorDeRegistroDeViagem,
                  gerador_de_registro_de_passagem: GeradorDeRegistroDePassagem,
@@ -62,7 +62,7 @@ class CompanhiaAerea(Persist):
 
     def registrar_que_viagem_aconteceu(self, hora_de_partida: DataTempo,
                                        hora_de_chegada: DataTempo, registro_de_viagem: RegistroDeViagem):
-        fabrica: Optional[ViagemFactory] = None
+        fabrica: Optional[ViagemBuilder] = None
         for registro_fabrica in self.voos_em_venda.values():
             if registro_de_viagem in registro_fabrica:
                 fabrica = registro_fabrica[registro_de_viagem]
@@ -170,7 +170,7 @@ class CompanhiaAerea(Persist):
                                               self.voos_planejados.values())
             viagens_nesse_dia_da_semana = self.voos_em_venda[data] = {}
             for voo_que_ira_acontecer in voos_nesse_dia_da_semana:
-                viagem_factory = ViagemFactory() \
+                viagem_factory = ViagemBuilder() \
                     .add_tarifa_franquia(self.tarifa_franquia) \
                     .adicionar_gerador_de_registro(self.gerador_de_registro_de_viagem) \
                     .gerar_registro() \
@@ -190,8 +190,8 @@ class CompanhiaAerea(Persist):
             voos_em_venda_na_data = self.voos_em_venda[data]
             if viagem not in voos_em_venda_na_data:
                 raise ValueError("Não é possivel cancelar uma viagem que já ocorreu")
-            viagem = voos_em_venda_na_data[viagem]
-            viagem.liberar_assento(passagem.registro, assento)
+            viagem_factory = voos_em_venda_na_data[viagem]
+            viagem_factory.liberar_assento(passagem.registro, assento)
         return
     def abrir_check_in_para_passagens(self, *args: RegistroDePassagem):
         if len(args) != 0:
@@ -222,7 +222,7 @@ class CompanhiaAerea(Persist):
 
     def comprar_passagem(self, id_cliente: DocumentoPassageiro, data: Data, aeroporto_de_saida: SiglaAeroporto,
                          aeroporto_de_chegada: SiglaAeroporto, franquias: FranquiasDeBagagem,
-                         assento: Optional[CodigoDoAssento]) -> Optional[RegistroDePassagem]:
+                         assento: Optional[CodigoDoAssento] = None) -> Optional[RegistroDePassagem]:
         if id_cliente not in self.passageiros:
             raise ValueError("Cliente nao cadastrado")
         cliente = self.passageiros[id_cliente]
@@ -230,7 +230,7 @@ class CompanhiaAerea(Persist):
         if len(voos) == 0:
             return None
 
-        def find_voo(codigo_voo: CodigoVoo) -> Optional[ViagemFactory]:
+        def find_voo(codigo_voo: CodigoVoo) -> Optional[ViagemBuilder]:
             viagem_factories = self.voos_em_venda[data]
             for viagem_factory in viagem_factories.values():
                 if viagem_factory.codigo_do_voo == codigo_voo:
@@ -276,6 +276,7 @@ class CompanhiaAerea(Persist):
         )
         cliente.passagens.append(passagem.registro)
         self.passagens[registro_passagem] = passagem
+        return passagem.registro
 
     def acessar_historico_de_viagens(self, passageiro: DocumentoPassageiro) -> list[Viagem]:
         if passageiro not in self.passageiros:

@@ -39,7 +39,7 @@ class PassageiroVipCalculoTarifaStrategy(CalculoTarifaStrategy):
 
         return self.tarifa * franquias_a_serem_pagas * self.tarifa_franquia / 2
 
-def calculo_tarifa_strategy_for(cliente_vip: bool, tarifa: float, tarifa_franquia: float):
+def calculo_tarifa_strategy_for(cliente_vip: bool, tarifa: float, tarifa_franquia: float) -> CalculoTarifaStrategy:
     if cliente_vip:
         return PassageiroVipCalculoTarifaStrategy(tarifa, tarifa_franquia)
     return PassageiroComumCalculoTarifaStrategy(tarifa, tarifa_franquia)
